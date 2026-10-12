@@ -8,7 +8,7 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {TBillToken} from "../TBillToken.sol";
 import {TBillVault} from "../TBillVault.sol";
 
-/// @title The redemption queue (Ex5) — four TODOs are waiting for you
+/// @title The redemption queue (Ex5) — FIFO settlement with locked redemption quotes
 /// @notice This is plank (c) of the bridge, the physical side. Selling a T-Bill and wiring the
 ///         cash takes a day (T+1 as it settles), so a redemption cannot be atomic. Instead the
 ///         holder hands in their shares and gets a ticket; when the issuer's cash lands, the
@@ -88,18 +88,18 @@ contract RedemptionQueue is AccessControl {
     }
 
     // ==================================================================
-    // TODO Ex5.1 — the decimal conversion
+    // Exercise Ex5.1 — the decimal conversion
     // ==================================================================
 
     /// @notice Value `shares` (18 decimals) in USDC smallest units (6 decimals), at an
     ///         8-decimal NAV
     /// @dev The product carries 18 + 8 = 26 decimals and you want 6 — divide by 10 to the what?
     function assetsAtNav(uint256 shares, uint256 nav) public pure returns (uint256) {
-        revert("TODO Ex5.1: assetsAtNav");
+        return shares * nav / DECIMALS_SCALE;
     }
 
     // ==================================================================
-    // TODO Ex5.2 — take the ticket
+    // Exercise Ex5.2 — take the ticket
     // ==================================================================
 
     /// @notice Hand in `shares` and lock in a payout at today's NAV
@@ -112,11 +112,18 @@ contract RedemptionQueue is AccessControl {
     ///      Locking the rate now is the point: the payout must not drift with the NAV while
     ///      the ticket waits in the queue.
     function enqueue(uint256 shares) external returns (uint256 id) {
-        revert("TODO Ex5.2: enqueue");
+        if (shares == 0) revert ZeroAmount();
+        IERC20(address(tBill)).safeTransferFrom(msg.sender, address(this), shares);
+        uint256 assets = assetsAtNav(shares, vault.navPerShare());
+        id = requests.length;
+        requests.push(Request(msg.sender, shares, assets, false));
+        pendingShares += shares;
+        pendingAssets += assets;
+        emit RedeemRequested(id, msg.sender, shares, assets);
     }
 
     // ==================================================================
-    // TODO Ex5.3 — honour the queue, first in first out
+    // Exercise Ex5.3 — honour the queue, first in first out
     // ==================================================================
 
     /// @notice `assets` of cash has arrived from selling the underlying; pay out tickets
@@ -132,16 +139,38 @@ contract RedemptionQueue is AccessControl {
     ///        - credit the owner's claimable balance and totalClaimable
     ///      Return how much you actually paid out.
     function settle(uint256 assets) external onlyRole(SETTLER_ROLE) returns (uint256 filled) {
-        revert("TODO Ex5.3: settle");
+        while (head < requests.length) {
+            Request storage request = requests[head];
+            // Never skip an unfunded head ticket or split its locked payout.
+            if (request.assetsLocked > assets - filled) break;
+            uint256 id = head;
+            request.settled = true;
+            ++head;
+            pendingShares -= request.shares;
+            pendingAssets -= request.assetsLocked;
+            claimable[request.owner] += request.assetsLocked;
+            totalClaimable += request.assetsLocked;
+            filled += request.assetsLocked;
+            // Either both external calls succeed or the entire settlement rolls back.
+            vault.releaseReserves(address(this), request.assetsLocked);
+            tBill.burn(address(this), request.shares);
+            emit Settled(id, request.owner, request.assetsLocked);
+        }
     }
 
     // ==================================================================
-    // TODO Ex5.4 — collect
+    // Exercise Ex5.4 — collect
     // ==================================================================
 
     /// @notice Withdraw the cash credited to you by settled tickets
     /// @dev Checks-effects-interactions: zero the balance before the transfer.
     function claim() external returns (uint256 assets) {
-        revert("TODO Ex5.4: claim");
+        assets = claimable[msg.sender];
+        if (assets == 0) revert NothingToClaim();
+        // Consume the entitlement before handing control to the cash token.
+        claimable[msg.sender] = 0;
+        totalClaimable -= assets;
+        usdc.safeTransfer(msg.sender, assets);
+        emit Claimed(msg.sender, assets);
     }
 }
