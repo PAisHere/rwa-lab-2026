@@ -159,16 +159,28 @@ queue is; the custodian must recognize the vault. Skip any one and the loop reve
 you are done.
 
 **Tier 2 (bonus)** — deploy to Sepolia and verify the source on Etherscan; put **all seven**
-addresses and their Etherscan links in your `README.md`, under a `## Deployment (Sepolia)` heading.
-The deploy prints them in this order: `MockUSDC`, `ComplianceRegistry`, `MockPriceFeed`,
-`TBillToken`, `MockTBillCustodian`, `TBillVault`, `RedemptionQueue`. The commands are Lab 1's
-`README.md` §4, under "Tier 2 (bonus)" — the flow is identical.
+addresses and their Etherscan links in your `README.md`, under a `## Deployment (Sepolia)
 
-**Tier 3 (challenge, optional)** — **Ex7**: `make challenge` (`test/challenges/FalseNav.t.sol`). The
-reporter's number is the chain's only window onto the asset; show what happens when it lies, and
-name the mechanism that would have caught it.
+Ethereum Sepolia, chain ID 11155111. Admin: `0xC187bB83855BDf8bB2CBA2738423eFb9B492F881`.
 
----
+The supplied successful broadcast log confirms all 13 deployment/configuration transactions
+and Etherscan verification of all seven contracts. Creation blocks: 11900153-11900159;
+role and whitelist configuration blocks: 11900160-11900165.
+
+| Contract | Address | Etherscan source | Verification |
+|---|---|---|---|
+| MockUSDC | `0xB93a05337a6CB763488B64CCD7e43aba9F8b9bF0` | [Source](https://sepolia.etherscan.io/address/0xB93a05337a6CB763488B64CCD7e43aba9F8b9bF0#code) | Verified |
+| ComplianceRegistry | `0x77E23d5ddA613da94Ede3746eA2e45c18cFB253c` | [Source](https://sepolia.etherscan.io/address/0x77E23d5ddA613da94Ede3746eA2e45c18cFB253c#code) | Verified |
+| MockPriceFeed | `0xB98cf2B3A5a870b7c4878652C01CF6DcdBda45E6` | [Source](https://sepolia.etherscan.io/address/0xB98cf2B3A5a870b7c4878652C01CF6DcdBda45E6#code) | Verified |
+| TBillToken | `0x13686A491886A249c82f415d058a0C685C672E32` | [Source](https://sepolia.etherscan.io/address/0x13686A491886A249c82f415d058a0C685C672E32#code) | Verified |
+| MockTBillCustodian | `0x34a544F3Ca848dcC5CaA7A233685a5FdaFd85B9D` | [Source](https://sepolia.etherscan.io/address/0x34a544F3Ca848dcC5CaA7A233685a5FdaFd85B9D#code) | Verified |
+| TBillVault | `0xF29950569ea87385A0122F817CDEe45c132a7A67` | [Source](https://sepolia.etherscan.io/address/0xF29950569ea87385A0122F817CDEe45c132a7A67#code) | Verified |
+| RedemptionQueue | `0x7Fa22174920f76923aE81a42092C9f1da61B0C67` | [Source](https://sepolia.etherscan.io/address/0x7Fa22174920f76923aE81a42092C9f1da61B0C67#code) | Verified |
+
+Compiled with Solidity 0.8.24, Cancun target, optimizer 200 runs. Deployment used Foundry 1.8.3
+with `--hardfork amsterdam --slow` to simulate the Sepolia gas schedule separately from the
+compiler target. Total actual gas: 32,384,306; total paid: 0.000038862174250759 ETH.
+See [deployment evidence](docs/sepolia-deployment-log.txt).
 
 ## 5. Common problems
 
@@ -222,3 +234,29 @@ What the zip must contain:
 
 The discussion prompts live in `STUDENT-QUESTIONS.md` — one per plank, no standard answers, and the
 real point of this lab.
+
+## Architecture
+
+![Tokenized U.S. Treasury bill protocol architecture](assets/arch.png)
+
+This flowchart outlines the architecture of a tokenized U.S. Treasury bill investment protocol, organized into four functional planks with interconnected on-chain logic and off-chain operations.
+
+For subscription, an Investor sends USDC to the **TBillVault** as a subscription payment. The vault mints corresponding **TBillToken** shares and delivers them to the Investor. The vault then deploys the deposited USDC to the **Custodian / SPV (plank a)**, which carries out off-chain purchases and sales of real Treasury bills. Proceeds from these off-chain sales are routed back to the vault via an operator.
+
+For portfolio valuation, a **Reporter (plank b)** attests the Net Asset Value (NAV) of the underlying assets and feeds it to the **MockPriceFeed**. The price supply delivers pricing data to the TBillVault, and the NAV is also accessible to the **RedemptionQueue (plank c)** through the vault.
+
+In the redemption workflow, the Investor escrows their TBillToken shares in the RedemptionQueue in exchange for a redemption ticket. The TBillVault releases USDC to the queue once funds are available; the queue then burns the escrowed shares, and the Investor claims the settled USDC from the queue.
+
+Finally, the **ComplianceRegistry (plank d)** enforces transfer compliance by whitelisting both the sender and receiver for every TBillToken transfer.
+
+## Deployment (Sepolia)
+
+| Contract | Address | Etherscan |
+|---|---|---|
+| MockUSDC | Pending | Pending |
+| ComplianceRegistry | Pending | Pending |
+| MockPriceFeed | Pending | Pending |
+| TBillToken | Pending | Pending |
+| MockTBillCustodian | Pending | Pending |
+| TBillVault | Pending | Pending |
+| RedemptionQueue | Pending | Pending |
