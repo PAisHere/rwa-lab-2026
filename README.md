@@ -251,12 +251,14 @@ Finally, the **ComplianceRegistry (plank d)** enforces transfer compliance by wh
 
 ## Deployment (Sepolia)
 
+Network: Ethereum Sepolia (chain ID `11155111`). The deployment log confirms successful on-chain execution and source verification of all seven contracts.
+
 | Contract | Address | Etherscan |
 |---|---|---|
-| MockUSDC | Pending | Pending |
-| ComplianceRegistry | Pending | Pending |
-| MockPriceFeed | Pending | Pending |
-| TBillToken | Pending | Pending |
-| MockTBillCustodian | Pending | Pending |
-| TBillVault | Pending | Pending |
-| RedemptionQueue | Pending | Pending |
+| MockUSDC | `0xB93a05337a6CB763488B64CCD7e43aba9F8b9bF0` | [Etherscan](https://sepolia.etherscan.io/address/0xB93a05337a6CB763488B64CCD7e43aba9F8b9bF0#code) |
+| ComplianceRegistry | `0x77E23d5ddA613da94Ede3746eA2e45c18cFB253c` | [Etherscan](https://sepolia.etherscan.io/address/0x77E23d5ddA613da94Ede3746eA2e45c18cFB253c#code) |
+| MockPriceFeed | `0xB98cf2B3A5a870b7c4878652C01CF6DcdBda45E6` | [Etherscan](https://sepolia.etherscan.io/address/0xB98cf2B3A5a870b7c4878652C01CF6DcdBda45E6#code) |
+| TBillToken | `0x13686A491886A249c82f415d058a0C685C672E32` | [Etherscan](https://sepolia.etherscan.io/address/0x13686A491886A249c82f415d058a0C685C672E32#code) |
+| MockTBillCustodian | `0x34a544F3Ca848dcC5CaA7A233685a5FdaFd85B9D` | [Etherscan](https://sepolia.etherscan.io/address/0x34a544F3Ca848dcC5CaA7A233685a5FdaFd85B9D#code) |
+| TBillVault | `0xF29950569ea87385A0122F817CDEe45c132a7A67` | [Etherscan](https://sepolia.etherscan.io/address/0xF29950569ea87385A0122F817CDEe45c132a7A67#code) |
+| RedemptionQueue | `0x7Fa22174920f76923aE81a42092C9f1da61B0C67` | [Etherscan](https://sepolia.etherscan.io/address/0x7Fa22174920f76923aE81a42092C9f1da61B0C67#code) |
